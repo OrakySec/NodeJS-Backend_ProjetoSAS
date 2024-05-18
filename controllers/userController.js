@@ -3,6 +3,7 @@ const router = express.Router();
 const autenticar = require('../services/loginService');
 const db = require('../config/dbConnect');
 const userModel = require('../models/userModel')
+const { verificarToken } = require('../utils/jwtUtils');
 
 
 
@@ -36,6 +37,18 @@ router.post('/cadastro', async (req, res) => {
     console.error('Erro ao cadastrar usuário:', error);
     res.status(500).json({ error: 'Erro ao cadastrar usuário' });
   }
+});
+
+router.get('/perfil', verificarToken, async (req, res) => {
+  const usuario = req.usuario;
+
+  if (!usuario) {
+    return res.status(401).send({ message: 'Usuário não autenticado' });
+  }
+
+  const [user] = await db.query('SELECT * FROM users WHERE id = ?', [usuario.id]);
+
+  res.status(200).send(user);
 });
 
 module.exports = router;
