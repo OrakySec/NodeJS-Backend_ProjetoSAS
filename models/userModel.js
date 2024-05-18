@@ -3,15 +3,13 @@ const db = require('../config/dbConnect');
 function buscarUsuarioPorCPF(cpf) {
       async function buscarUsuarioNoBanco(cpf) {
         try {
-          const [usuario] = await db.query('SELECT * FROM users WHERE cpf = ?', [cpf]);
-          console.log('Usuário encontrado no banco de dados:', usuario);
-          return usuario;
+          const usuario = await db.query('SELECT * FROM users WHERE cpf = ?', [cpf]);
+          return usuario[0];
         } catch (error) {
           console.error(error);
           return null;
         }
       }
-    
       return buscarUsuarioNoBanco(cpf);
     }
 
@@ -54,22 +52,10 @@ function validarCPF(cpf) {
   return cpf[9] === String(digito1) && cpf[10] === String(digito2);
 }
 
-function verificarSenha(senha) {
-  return new Promise((resolve, reject) => {
-    db.query('SELECT * FROM users WHERE senha = ?', [senha], (err, results) => {
-      if (err) {
-        reject(err);
-      } else {
-        const usuario = results[0];
-        if (usuario) {
-          resolve(usuario);
-        } else {
-          reject(new Error('Senha incorreta'));
-        }
-      }
-    });
-  });
+function verificarSenha(usuario, senha) {
+  return usuario === senha;
 }
+
 
 // Exportar as funções
 module.exports = {

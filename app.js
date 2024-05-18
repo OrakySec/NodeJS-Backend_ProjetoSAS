@@ -1,5 +1,5 @@
 const express = require('express');
-const morgan = require('morgan')
+// const morgan = require('morgan')
 const userController = require('./controllers/userController')
 const agendarConsulta = require('./controllers/consultaController');
 const cookieParser = require('cookie-parser');
@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(morgan('dev'));
+// app.use(morgan('dev'));
 
 app.use('/users', userController);
 app.use('/consulta', agendarConsulta)

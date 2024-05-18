@@ -8,23 +8,12 @@ if (!secretKey) {
 }
 
 // Função para gerar token JWT
-exports.gerarToken = (cpf) => {
+exports.gerarToken = (id) => {
   const payload = {
-    cpf,
+    id,
   };
 
   const token = jwt.sign(payload, secretKey);
-
-    // Verificar se a assinatura do token é válida
-    try {
-      const verificacao = jwt.verify(token, secretKey);
-      console.log('Assinatura do token válida.');
-    } catch (error) {
-      console.error('Assinatura do token inválida:', error);
-    }
-  
-    console.log(`Token gerado: ${token}`); // Adicione essa linha
-
     return token;
   };
   

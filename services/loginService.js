@@ -10,24 +10,25 @@ async function autenticar(cpf, senha) {
 
   // Verificar se o CPF é válido
   const cpfValido = userModel.validarCPF(cpf);
-  if (!cpfValido) {
+  if (cpfValido) {
+    console.log('CPF Validado', cpf)
+  } else {
     throw new Error('CPF inválido');
   }
 
   // Buscar usuário no banco de dados
-  const usuario = userModel.buscarUsuarioPorCPF(cpf);
-  if (!usuario) {
+  const usuario = await userModel.buscarUsuarioPorCPF(cpf);
+  if (!usuario || !usuario[0]) {
     throw new Error('Usuário não encontrado');
   }
 
-  // Verificar se a senha está correta
-  const senhaCorreta = userModel.verificarSenha(senha, usuario.senha);
-  if (!senhaCorreta) {
+  if (userModel.verificarSenha(senha, usuario[0].senha)) {
+    const id = usuario[0].id;
+    const token = gerarToken(id);
+    return token;
+  } else {
     throw new Error('Senha incorreta');
   }
-
-  const token = gerarToken(cpf);
-  return token;
 }
 
 module.exports = autenticar;
