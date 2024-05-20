@@ -29,6 +29,7 @@ CREATE TABLE consultas (
 
 -- Criação da tabela endereco
 CREATE TABLE endereco (
+    id_endereco INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     id_usuario BIGINT,
     endereco VARCHAR(255),
     cep VARCHAR(10),
