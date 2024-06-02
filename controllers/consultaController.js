@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/dbConnect');
 const { verificarToken } = require('../utils/jwtUtils');
+const consultaModel = require('../models/consultaModel')
 
 // Rota para agendar uma consulta.
 router.post('/agendar', verificarToken, async (req, res) => {
@@ -26,8 +27,8 @@ router.post('/agendar', verificarToken, async (req, res) => {
   }
 
 
-  // Insere uma nova consulta no banco de dados.
-  await db.query('INSERT INTO consultas (id_usuario, data_consulta, horario_consulta, tipo_consulta) VALUES (?, ?, ?, ?)', [usuario.id, data_consulta, horario_consulta, tipo_consulta]);
+  // Agenda a consulta no banco de dados.
+  await consultaModel.agendarConsulta(usuario.id, data_consulta, horario_consulta, tipo_consulta);
 
   // Retorna uma mensagem de sucesso.
   res.status(200).send({ message: 'Consulta agendada com sucesso' });
@@ -44,7 +45,7 @@ router.get('/exibirTodas', verificarToken, async (req, res) => {
   }
 
   // Busca todas as consultas do usuário no banco de dados.
-  const [consultas] = await db.query('SELECT * FROM consultas WHERE id_usuario = ?', [usuario.id]);
+  const consultas = await consultaModel.exibirTodasConsultas(usuario.id);
 
   // Retorna todas as consultas.
   res.status(200).send(consultas);
@@ -61,7 +62,7 @@ router.get('/exibirUltima', verificarToken, async (req, res) => {
   }
 
   // Busca a última consulta do usuário no banco de dados.
-  const [consulta] = await db.query('SELECT * FROM consultas WHERE id_usuario = ? ORDER BY id_consulta DESC LIMIT 1', [usuario.id]);
+  const consulta = await consultaModel.exibirUltimaConsulta(usuario.id);
 
   // Retorna a última consulta.
   res.status(200).send(consulta);
@@ -85,18 +86,8 @@ router.put('/alterarUltimaConsulta', verificarToken, async (req, res) => {
     return res.status(400).send({ message: 'Por favor, preencha todos os campos' });
   }
 
-  // Busca a última consulta do usuário no banco de dados.
-  const consulta = await db.query('SELECT * FROM consultas WHERE id_usuario = ? ORDER BY id_consulta DESC LIMIT 1', [usuario.id]);
-  if (!consulta[0]) {
-    return res.status(404).send({ message: 'Nenhuma consulta encontrada' });
-  }
-
-  // Obtém o ID da última consulta.
-  const ultimaConsulta = consulta[0];
-  const consultaId = ultimaConsulta[0].id_consulta;
-
-  // Atualiza a última consulta com os novos dados.
-  await db.query('UPDATE consultas SET data_consulta = ?, horario_consulta = ?, tipo_consulta = ? WHERE id_consulta = ?', [data_consulta, horario_consulta, tipo_consulta, consultaId]);
+  // Altera a última consulta do usuário no banco de dados.
+  await consultaModel.alterarUltimaConsulta(usuario.id, data_consulta, horario_consulta, tipo_consulta);
 
   // Retorna uma mensagem de sucesso.
   res.status(200).send({ message: 'Consulta alterada com sucesso' });

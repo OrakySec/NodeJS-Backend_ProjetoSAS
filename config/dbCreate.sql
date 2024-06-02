@@ -13,7 +13,7 @@ CREATE TABLE users (
     numero_cadsus VARCHAR(20) NOT NULL UNIQUE,
     sexo VARCHAR(10) NOT NULL,
     telefone VARCHAR(15) NOT NULL,
-    senha VARCHAR(50) NOT NULL,
+    senha VARCHAR(255) NOT NULL,
     foto_perfil LONGBLOB
 );
 
@@ -29,6 +29,7 @@ CREATE TABLE consultas (
 
 -- Criação da tabela endereco
 CREATE TABLE endereco (
+    id_endereco INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     id_usuario BIGINT,
     endereco VARCHAR(255),
     cep VARCHAR(10),

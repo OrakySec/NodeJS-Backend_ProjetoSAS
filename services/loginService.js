@@ -1,3 +1,4 @@
+// loginService.js
 
 // Importações
 const userModel = require('../models/userModel');
@@ -23,16 +24,17 @@ async function autenticar(cpf, senha) {
     throw new Error('Usuário não encontrado');
   }
 
-  // Verificar se a senha fornecida corresponde à senha do usuário
-  if (userModel.verificarSenha(senha, usuario[0].senha)) {
-    // Se a senha estiver correta, gera um token JWT para o usuário
-    const id = usuario[0].id; // Obtém o ID do usuário
-    const token = gerarToken(id); // Gera o token JWT com base no ID
-    return token; // Retorna o token JWT
-  } else {
-    // Se a senha estiver incorreta, lança um erro
-    throw new Error('Senha incorreta');
-  }
+ // Verificar se a senha fornecida corresponde à senha do usuário
+ const isValid = await userModel.verificarSenha(usuario, senha);
+ if (isValid) {
+   // Se a senha estiver correta, gera um token JWT para o usuário
+   const id = usuario[0].id; // Obtém o ID do usuário
+   const token = gerarToken(id); // Gera o token JWT com base no ID
+   return token; // Retorna o token JWT
+ } else {
+   // Se a senha estiver incorreta, lança um erro
+   throw new Error('Senha incorreta');
+ }
 }
 
 // Exporta a função de autenticação para uso em outros módulos

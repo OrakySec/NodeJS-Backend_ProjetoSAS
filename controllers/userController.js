@@ -1,61 +1,43 @@
+// userController.js
 
 // Importações
 const express = require('express');
 const router = express.Router();
 const autenticar = require('../services/loginService');
-const db = require('../config/dbConnect');
 const userModel = require('../models/userModel');
-
-// Importa a função para verificar o token JWT.
+const bcrypt = require('bcrypt');
 const { verificarToken } = require('../utils/jwtUtils');
 
-// Rota para efetuar login.
-router.post('/login', async (req, res) => {
-  // Extrai CPF e senha do corpo da requisição.
-  const { cpf, senha } = req.body;
-
+// Rota de Cadastro
+router.post('/cadastro', async (req, res) => {
   try {
-    // Autentica o usuário.
-    const token = await autenticar(cpf, senha);
-
-    // Busca o usuário no banco de dados pelo CPF.
-    const usuario = await userModel.buscarUsuarioPorCPF(cpf);
-
-    // Define um cookie com o token JWT.
-    res.cookie('jwt', token, {
-      httpOnly: true,
-      maxAge: 15 * 24 * 60 * 60 * 1000, // 15 dias de validade
-    });
-
-    // Retorna uma mensagem de autenticação bem-sucedida.
-    res.status(200).send({ message: 'Autenticação bem-sucedida' });
+    const { nome, cpf, data_nascimento, numero_cadsus, sexo, telefone, senha } = req.body;
+    const userId = await userModel.inserirUsuario(nome, cpf, data_nascimento, numero_cadsus, sexo, telefone, senha);
+    res.status(201).json({ message: 'Usuario Cadastrado com Sucesso!' });
   } catch (error) {
-    // Retorna uma mensagem de erro em caso de falha na autenticação.
-    res.status(400).send({ message: error.message });
+    console.error('Erro ao cadastrar usuário:', error);
+    res.status(500).json({ error: 'Erro ao cadastrar usuário' });
   }
 });
 
-// Rota para cadastrar um novo usuário.
-router.post('/cadastro', async (req, res) => {
+// Rota de Login
+router.post('/login', async (req, res) => {
+  const { cpf, senha } = req.body;
   try {
-    // Extrai os dados do usuário do corpo da requisição.
-    const { nome, cpf, data_nascimento, numero_cadsus, sexo, telefone, senha } = req.body;
-
-    // Define a query SQL para inserir o usuário no banco de dados.
-    const query = 'INSERT INTO users (nome, cpf, data_nascimento, numero_cadsus, sexo, telefone, senha) VALUES (?, ?, ?, ?, ?, ?, ?)';
-    
-    // Define os valores a serem inseridos na query.
-    const values = [nome, cpf, data_nascimento, numero_cadsus, sexo, telefone, senha];
-    
-    // Executa a query no banco de dados.
-    const result = await db.execute(query, values);
-
-    // Retorna o ID do usuário cadastrado.
-    res.status(201).json({ id: result.insertId });
+    const usuario = await userModel.buscarUsuarioPorCPF(cpf);
+    const isValid = await userModel.verificarSenha(usuario, senha);
+    if (isValid) {
+      const token = await autenticar(cpf, senha);
+      res.cookie('jwt', token, {
+        httpOnly: true,
+        maxAge: 15 * 24 * 60 * 60 * 1000, // 15 dias de validade
+      });
+      res.status(200).send({ message: 'Autenticação bem-sucedida' });
+    } else {
+      res.status(400).send({ message: 'Senha incorreta' });
+    }
   } catch (error) {
-    // Retorna uma mensagem de erro em caso de falha no cadastro.
-    console.error('Erro ao cadastrar usuário:', error);
-    res.status(500).json({ error: 'Erro ao cadastrar usuário' });
+    res.status(400).send({ message: error.message });
   }
 });
 
@@ -70,7 +52,7 @@ router.get('/perfil', verificarToken, async (req, res) => {
   }
 
   // Busca as informações do usuário no banco de dados com base no ID.
-  const [user] = await db.query('SELECT * FROM users WHERE id = ?', [usuario.id]);
+  const user = await userModel.buscarUsuarioPorID(usuario.id);
 
   // Retorna as informações do usuário.
   res.status(200).send(user);
